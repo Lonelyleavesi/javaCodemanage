@@ -29,11 +29,12 @@ public  class  Server extends Thread{
   	   return command;
      }
     public synchronized String setCommand(String str) {
-    	System.out.println("set command to" + str);
+    	//System.out.println("set command to " + str);
     	command = str;
    	   return command;
       }
     @Override
+    
     public void run(){
 
         super.run();
@@ -47,9 +48,8 @@ public  class  Server extends Thread{
             int len = 0;
             byte[] buf = new byte[1024];
             while ((len=in.read(buf))!=-1){
-                System.out.println("client saying: "+new String(buf,0,len));
+                //System.out.println("client saying: "+new String(buf,0,len));
                 if (len > 0) {
-                	System.out.println(len);
                     setCommand(new String(buf,0,len));
 				}
             }
@@ -79,8 +79,8 @@ public  class  Server extends Thread{
                         	operate = Integer.parseInt(sourceStrArray[0]);
                         	source = sourceStrArray[1];
                         	destiny = sourceStrArray[2];
-                        	System.out.println(operate + source + destiny);
-                        	
+                        	//System.out.println("operate is "+ operate +"\nsoucce is: "+ source+"\ndestiny is: " + destiny);
+
                         	 //1为展示当前所在目录    2为展示当前目录下所有文件 3设置路径 4进入路径下的一个文件夹 
                             //5返回上一目录 6创建一个文件  7创建一个文件夹  8删除一个文件或文件夹 9在当前目录下拷贝一个文件
                         	switch (operate) {
@@ -220,7 +220,15 @@ public  class  Server extends Thread{
     						}
     							break;
     						case 14:{  //服务器到客户端传输文件
-
+    							File temp = new File(source);
+    							if (!temp.exists() || temp.isDirectory()) {
+    								out.write(("源文件不存在...").getBytes());
+								}
+    							else {
+    								out.write(("14").getBytes());
+    								fileManage.ServerToClient(out, source);
+    								out.write((" ").getBytes());
+    							}	
     						}
     							break;
     						case 15:{  //服务器到客户端传输文件
@@ -228,6 +236,7 @@ public  class  Server extends Thread{
     						}
     							break;
     						default:
+    							
     							break;
     						}
 						}

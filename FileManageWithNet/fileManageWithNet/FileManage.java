@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.io.FileInputStream;
@@ -404,20 +405,39 @@ public class FileManage {
 		System.out.println("line number "+linenumber);
 		return new File(to);
 	}
-//	
-//	public File ServerToClient(Socket socket, String tFile) throws IOException {
-//		OutputStream out = socket.getOutputStream();
-//		int length =0;
-//		File tfile = new File(tFile);
-//		FileInputStream fis = new FileInputStream(tfile);
-//		
-//		DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-//		byte[] sendByte = new byte[1024];
-//
-////		while((length=fis.read(sendByte))>0){				
-////			dos.write(sendByte, 0 , length);
-////			dos.flush();
-////		}
-//		return tfile;	
-//	}
+	
+	public File ServerToClient(OutputStream out, String tFile) throws IOException {
+		int val = 2048;
+		File tfile = new File(tFile);
+		if (!tfile.exists()) {
+			return null;
+		}
+		ObjectOutputStream oos = new ObjectOutputStream(out);
+		FileInputStream fis = new FileInputStream(tFile);
+		long fileSize = tfile.length();
+        byte[] bytes = new byte[val];
+        System.out.println("开始读发送文件……！");
+      //算出即将发送字节数组的字数
+        long times = fileSize/val+1;
+        //算出最后一组字节数组的有效字节数
+        int lastBytes = (int)fileSize%2048;
+        //1.发送字节数组长度
+        oos.writeInt(val);
+        //2.发送次数
+        oos.writeLong(times);
+        oos.flush();
+        //3.最后一次字节个数
+        oos.writeInt(lastBytes);
+        oos.flush();
+      //读取字节数组长度的字节，返回读取字节数中的数据个数
+        int value = fis.read(bytes);
+        while(value != -1){
+            //偏移字节数读取
+            oos.write(bytes,0,value);
+            oos.flush();
+            value = fis.read(bytes);
+        }
+        System.out.println("文件发送完毕！");
+		return tfile;	
+	}
 }
