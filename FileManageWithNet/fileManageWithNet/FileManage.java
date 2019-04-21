@@ -89,10 +89,14 @@ public class FileManage {
 	
 	//退出一层目录
  	public File quitOneLevel() {
-		filePath = new StringBuffer(file.getParent()); 
-		file = new File(filePath.toString());
-		System.out.println("退出一层目录...");
-		return file;
+ 		if (file.getParent() != null) {
+ 			filePath = new StringBuffer(file.getParent()); 
+ 			file = new File(filePath.toString());
+ 			System.out.println("退出一层目录...");
+ 			return file;
+		}
+ 		System.out.println("无上一级目录...");
+		return null;
 	}
 	
 	//建立一个文件夹
@@ -357,12 +361,13 @@ public class FileManage {
     }  
 	//为当前目录下的一个文件创建拷贝
 	public File copyCurrLoc(String FileName) {
-		File Source = selectFile(FileName);
+		String tempPath = filePath.toString()+"\\"+FileName;
+		File Source = selectFile(tempPath);
 		if (Source == null) {
 			System.out.println("源文件不存在！");
 			return null;
 		}
-		File Destiny = selectFile(FileName);
+		File Destiny = selectFile(tempPath);
 		StringBuffer tempName = new StringBuffer();
 		
 		int i = 1;    //为创建一个文件的多份拷贝设置的标识符

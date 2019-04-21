@@ -2,8 +2,10 @@ package fileManageWithNet;
 
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -16,6 +18,7 @@ public  class  Server extends Thread{
     Socket socket = null;
     FileManage fileManage;
     String command;
+    String DesReceiveFromClient;
     public Server(int port) {
     	command = null;
     	fileManage = new FileManage();
@@ -29,12 +32,50 @@ public  class  Server extends Thread{
   	   return command;
      }
     public synchronized String setCommand(String str) {
-    	//System.out.println("set command to " + str);
+    	//System.out.println("set command to: " + str);
     	command = str;
    	   return command;
       }
-    @Override
     
+    public synchronized String getDes() {
+   	   return DesReceiveFromClient;
+      }
+     public synchronized String setDes(String str) {
+     	//System.out.println("set command to " + str);
+    	 DesReceiveFromClient = str;
+    	   return DesReceiveFromClient;
+       }
+     
+     public void receiveFile(InputStream is)throws IOException {
+  	   //System.out.println("join received file !");
+  	   ObjectInputStream ois = new ObjectInputStream(is);
+  	   //System.out.println("ready fos!");
+  	   FileOutputStream fos = new FileOutputStream(DesReceiveFromClient);
+  	   //System.out.println("end fos!");
+  	 //1.读取的数组长度
+         int lenght = ois.readInt();
+         //2.读取次数
+         long times = ois.readLong();
+         //3.读取最后一次字节长度
+         int lastBytes = ois.readInt();
+         byte[] bytes = new byte[lenght];
+         System.out.println("ready read!...");
+         while(times > 1){
+             ois.readFully(bytes);
+             fos.write(bytes);
+             fos.flush();
+             //System.out.println("剩余"+times+"次");
+             times -- ;
+         }
+         //System.out.println("处理最后...");
+         bytes = new byte[lastBytes];
+         ois.readFully(bytes);
+         fos.write(bytes);
+         fos.flush();
+         //System.out.println("文件接收完毕");	
+     }
+     
+    @Override
     public void run(){
 
         super.run();
@@ -49,9 +90,14 @@ public  class  Server extends Thread{
             byte[] buf = new byte[1024];
             while ((len=in.read(buf))!=-1){
                 //System.out.println("client saying: "+new String(buf,0,len));
-                if (len > 0) {
-                    setCommand(new String(buf,0,len));
-				}
+            	if ((new String(buf, 0, len)).equals("15")) { //表示即将接受文件
+            		System.out.println("准备接受文件！..");
+            		receiveFile(in);
+            		System.out.println("接受文件完毕！..");
+            	}
+            	else {
+                	setCommand(new String(buf,0,len));
+            	}
             }
 
         }catch (IOException e){
@@ -126,8 +172,14 @@ public  class  Server extends Thread{
     						}
     							break;
     						case 5:{  //5返回上一目录
-    							File temp = fileManage.quitOneLevel();						
+    							File temp = fileManage.quitOneLevel();		
+    							if (temp !=null ) {
     								out.write((temp.toString()).getBytes());
+								}
+    							else {
+    								out.write(("无上一级目录！...").getBytes());
+    							}
+    								
     						}
     							break;
     						case 6:{  //6创建一个文件
@@ -232,7 +284,7 @@ public  class  Server extends Thread{
     						}
     							break;
     						case 15:{  //服务器到客户端传输文件
-
+    							setDes(destiny);
     						}
     							break;
     						default:
