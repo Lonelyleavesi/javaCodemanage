@@ -15,6 +15,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
+//这是基于命令行的文件管理
 public class Client extends Thread {
 
     //定义一个Socket对象
@@ -23,7 +24,7 @@ public class Client extends Thread {
     String sourse = "x";
     String destiny = "x";
     public Client(String host, int port) {
-    	operator = 0;
+    	operator = 999;
         try {
             //需要服务器的IP地址和端口号，才能获得正确的Socket对象
             socket = new Socket(host, port);
@@ -35,44 +36,46 @@ public class Client extends Thread {
 
     }
 
+      
+     
     public synchronized int getOperator() {
  	   return operator;
     }
-     
+     public synchronized int setOperator(int opt) {
+ 	   operator = opt;
+ 	   return operator;
+   }
     public synchronized String getSource() {
   	   return sourse;
      }
     public synchronized String getDestiny() {
    	   return destiny;
       }
-   public synchronized int setOperator(int opt) {
- 	   operator = opt;
- 	   return operator;
-   }
+   
    
    public synchronized void setOPT() {
 	   Scanner scanner=null;
 	   scanner=new Scanner(System.in);
-	   int opt=scanner.nextInt();
+   	   int opt = scanner.nextInt();
    	   setOperator(opt);
-   	
+   	   	//相对路径是指 只用输入当前路径下的文件即可， 绝对路径 需要输入一个完整的文件地址
    		//1为展示当前所在目录（相对路径）    2为展示当前目录下所有文件（相对路径） 3设置路径（绝对路径） 4进入路径下的一个文件夹 （相对路径）
    		//5返回上一目录（相对路径） 6创建一个文件（相对路径）  7创建一个文件夹（相对路径）  8删除一个文件或文件夹（绝对路径） 9在当前目录下拷贝一个文件 （相对路径）
    		if ( opt >= 3 && opt <= 9) {
 			sourse = scanner.next();  //只需要输入源文件 一个参数
 		}
-   		//10拷贝一个文件到目的文件 （都需要输入（绝对路径）） //11拷贝一个文件夹到目的文件（都需要输入（绝对路径））
+   		//10拷贝一个 文件 到目的文件 （都需要输入（绝对路径）） //11拷贝一个  文件夹  到目的文件（都需要输入（绝对路径））
    		//12当前目录下选择一个文件生成一个加密文件  （都需要输入（相对路径））     13当前目录下选择一个加密文件输出到解密文件（都需要输入（相对路径））
 		if (opt >= 10 && opt <= 13) {
 			sourse = scanner.next();
 			destiny = scanner.next();
 		}
 			
-		if (opt  == 14) {  //服务器传文件到客户端
+		if (opt  == 14) {  //服务器传文件到客户端 （都需要输入（绝对路径））
 			sourse = scanner.next();
 			destiny = scanner.next();
 		}
-		if (opt  == 15) {  //客户端传文件到服务器
+		if (opt  == 15) {  //客户端传文件到服务器（都需要输入（绝对路径））
 			sourse = scanner.next();
 			destiny = scanner.next();
 		}
@@ -172,10 +175,8 @@ public class Client extends Thread {
             super.run();
             //写操作
             OutputStream os= null;
-            try {
-                
+            try {  
                 os= socket.getOutputStream(); 
-               
                 do {
                 	setOPT();
                 	int opt =getOperator();
@@ -183,6 +184,7 @@ public class Client extends Thread {
                     String  tdestiny = getDestiny();
                     
 					if (opt != 999) {
+						System.out.println("send : " + (opt + "|" + tsourse +"|" + tdestiny));
 	                    os.write((opt + "|" + tsourse +"|" + tdestiny).getBytes());
 	                    os.flush();
 					}
@@ -191,7 +193,7 @@ public class Client extends Thread {
 						os.flush();
 						sendFile(os,tsourse);
 					}
-                    opt = 999;
+                    setOperator(999);
                     //setOperator(opt);
                     os.flush();
                 } while (true);
